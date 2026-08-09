@@ -8,3 +8,6 @@ __pycache__/
 *.before_*
 *.BAK*
 *.orig
+
+# intermediate results of individual tasks
+data/partial/
