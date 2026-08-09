@@ -1,0 +1,10 @@
+# The results were obtained with numpy 2.4.4, scipy 1.17.1 and
+# matplotlib 3.10.8 on the development machine, and reproduced with
+# numpy 1.24 and the corresponding scipy on the cluster used for the
+# large runs.  The code is written to work on both: numpy renamed
+# `trapz` to `trapezoid` in 2.0, and the single place that uses it binds
+# whichever is available.
+numpy>=1.22
+scipy>=1.8
+matplotlib>=3.5
+sympy>=1.11

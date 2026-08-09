@@ -1,0 +1,5 @@
+M,t_star_upwind_fd
+80,no event; min S(1) reached 3.3945 by t=30.000
+160,10.769632
+320,10.766999
+640,10.766778

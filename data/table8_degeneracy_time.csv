@@ -1,0 +1,16 @@
+study,event_threshold,N,integrator,rtol,t_star
+threshold,1e-02,32,DOP853,1e-10,10.771665008
+threshold,1e-03,32,DOP853,1e-10,10.771673990
+threshold,1e-04,32,DOP853,1e-10,10.771674082
+threshold,1e-05,32,DOP853,1e-10,10.771674083
+threshold,1e-06,32,DOP853,1e-10,10.771674083
+resolution,1e-06,16,DOP853,1e-10,not detected
+resolution,1e-06,20,DOP853,1e-10,10.802603160
+resolution,1e-06,24,DOP853,1e-10,10.792632375
+resolution,1e-06,32,DOP853,1e-10,10.771674083
+resolution,1e-06,48,DOP853,1e-10,10.767379909
+resolution,1e-06,64,DOP853,1e-10,10.766826258
+resolution,1e-06,96,DOP853,1e-10,10.766826492
+integrator,1e-06,32,DOP853,1e-10,10.771674083
+integrator,1e-06,32,DOP853,1e-12,10.771674083
+integrator,1e-06,32,Radau,1e-09,10.771674083

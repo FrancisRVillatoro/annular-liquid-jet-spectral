@@ -1,0 +1,17 @@
+The contents of data/ and figures/ are licensed under the Creative Commons
+Attribution 4.0 International License (CC BY 4.0).
+
+    https://creativecommons.org/licenses/by/4.0/
+
+Attribution: F. R. Villatoro, "Annular liquid jets: exact constraint
+absorption and finite-time loss of transversality" (2026).
+
+Note on third-party values.  Some columns of the files under data/ reproduce
+convergence lengths tabulated in
+
+  J. I. Ramos, Appl. Math. Modelling 16, 464-475 (1992), Table 1
+  J. I. Ramos, Comput. Mech. 11, 28-64 (1993), Table 4
+
+for comparison only.  Those columns are identified by name in each file.
+They are short factual data reproduced for scientific comparison and are not
+covered by the licence above.

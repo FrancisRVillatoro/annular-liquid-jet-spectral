@@ -1,0 +1,11 @@
+N,protocol,t_star,min_S1,n_clamped
+24,historical_transient,23.025676,0.0001,0
+32,historical_transient,22.972161,0.0001,0
+48,historical_transient,22.870314,0.0001,0
+64,historical_transient,22.892770,0.0001,0
+96,historical_transient,22.883384,0.0001,0
+24,periodic_orbit,32.813799,0.0001,0
+32,periodic_orbit,32.807831,0.0001,0
+48,periodic_orbit,32.807246,0.0001,0
+64,periodic_orbit,32.807284,0.0001,0
+96,periodic_orbit,32.807284,0.0001,0

@@ -1,0 +1,32 @@
+{
+  "title": "Annular liquid jets: solvers and data for exact constraint absorption and finite-time loss of transversality",
+  "upload_type": "software",
+  "description": "<p>Chebyshev collocation solvers for the one-dimensional model of annular liquid jets in which the algebraic constraint at the free end is absorbed identically, an independent third-order upwind finite-difference solver used for cross-validation, the drivers that regenerate every table and figure of the accompanying paper, and the resulting data.</p>",
+  "creators": [
+    {
+      "name": "Villatoro, Francisco R.",
+      "affiliation": "Universidad de Malaga",
+      "orcid": "0000-0003-4314-6213"
+    }
+  ],
+  "license": "MIT",
+  "access_right": "open",
+  "keywords": [
+    "annular liquid jet",
+    "liquid curtain",
+    "free boundary",
+    "differential-algebraic index",
+    "Chebyshev collocation",
+    "capillary criticality"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "10.1063/XXXXXXX",
+      "relation": "isSupplementTo",
+      "resource_type": "publication-article",
+      "scheme": "doi"
+    }
+  ],
+  "grants": [],
+  "notes": "Supported by the Universidad de Malaga through project PPRO-B4-2026-004 of its Plan Propio de Investigacion, Transferencia y Divulgacion Cientifica. Computations used resources of the Supercomputing and Bioinformatics Center (SCBI) of the Universidad de Malaga."
+}

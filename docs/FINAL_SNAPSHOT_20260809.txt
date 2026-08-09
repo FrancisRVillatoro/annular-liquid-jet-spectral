@@ -1,0 +1,14 @@
+ANNULAR LIQUID JET — FINAL NUMERICAL SNAPSHOT
+Date: 2026-08-09
+Picasso full clean job: 1858916
+Picasso merge job: 1859348
+Tasks: 0-409
+Number of tasks: 410
+Merged tables: 21
+Total table lines including headers: 431
+
+Code manifest:
+9ab902421a0d61da5c19513247b4297cef3c0c555535b91aa8ec7f106818211d  SHA256SUMS
+
+Data manifest:
+a6df8b9dcd0226c7ed36f68bd4dcf657140f15dc6b050b8489cda78ffc897aad  DATA_SHA256SUMS_20260809.txt

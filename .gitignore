@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.DS_Store
+
+# hand-made backups from interactive sessions on remote machines
+*.pre_*
+*.before_*
+*.BAK*
+*.orig
