@@ -1,7 +1,7 @@
 {
-  "title": "Annular liquid jets: solvers and data for exact constraint absorption and finite-time loss of transversality",
+  "title": "Annular liquid jets: solvers and data for exact constraint absorption and finite-time loss of global admissibility",
   "upload_type": "software",
-  "description": "<p>Chebyshev collocation solvers for the one-dimensional model of annular liquid jets in which the algebraic constraint at the free end is absorbed identically, an independent third-order upwind finite-difference solver used for cross-validation, the drivers that regenerate every table and figure of the accompanying paper, and the resulting data.</p>",
+  "description": "<p>Chebyshev collocation and independent upwind finite-difference solvers for the one-dimensional annular-liquid-jet model, together with the drivers and data supporting the revised manuscript. Version v1.1.0 adds global-admissibility detection, independent cross-validation of the first interior contact, quadratic-contact diagnostics, componentwise off-grid residuals, temporal and periodicity tests, linear frequency response, corrected N+2 Gauss--Legendre volume quadrature, and a finite-thickness closure-absorption audit.</p>",
   "creators": [
     {
       "name": "Villatoro, Francisco R.",
@@ -15,8 +15,11 @@
     "annular liquid jet",
     "liquid curtain",
     "free boundary",
+    "global admissibility",
+    "interior contact",
     "differential-algebraic index",
     "Chebyshev collocation",
+    "finite-thickness closure",
     "capillary criticality"
   ],
   "related_identifiers": [
@@ -28,5 +31,5 @@
     }
   ],
   "grants": [],
-  "notes": "Supported by the Universidad de Malaga through project PPRO-B4-2026-004 of its Plan Propio de Investigacion, Transferencia y Divulgacion Cientifica. Computations used resources of the Supercomputing and Bioinformatics Center (SCBI) of the Universidad de Malaga."
+  "notes": "Version v1.1.0 accompanies the revised Physics of Fluids submission. The peer-review revision calculations were reproduced on the UMA SCBI Picasso cluster as Slurm array job 2405358. Supported by the Universidad de Malaga through project PPRO-B4-2026-004 of its Plan Propio de Investigacion, Transferencia y Divulgacion Cientifica."
 }

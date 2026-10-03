@@ -7,14 +7,15 @@ b0* = 0, nondimensional equations (16)-(20), (25)-(26), (30).
 
 Key structural facts exploited here (see verify_* drivers):
 
-1.  The tip eta = 1 is a transversal zero of R with R_z(L) finite and
-    nonzero.  The substitution
+1.  While the represented jet is globally admissible, the imposed tip
+    eta = 1 is a transversal zero of R with R_z(L) finite and nonzero.
+    The substitution
 
         R(eta) = (1 - eta) S(eta)
 
-    yields an S that is analytic on the closed interval, so Chebyshev
-    collocation converges geometrically.  The constraint R(1) = 0 is
-    absorbed exactly and never imposed by extrapolation.
+    absorbs the local constraint R(1) = 0 exactly.  Global admissibility
+    additionally requires S(eta) > 0 for 0 <= eta < 1; the revised
+    calculations stop at the first interior zero of the full interpolant.
 
 2.  The steady system changes type where
 
@@ -206,8 +207,8 @@ class Parameters:
 
         C2.  Two runs with the same (a, St) but different ramp_cycles are
         *different problems* in the transient, and any time-resolved
-        quantity -- in particular the time of a finite-time degeneracy --
-        must be reported together with the protocol.
+        quantity -- in particular any finite-time contact event -- must be
+        reported together with the protocol.
 
         'historical_transient' (ramp_cycles = 0) reproduces the abrupt
         switch-on of Ramos (1992): the nozzle data are incompatible with
@@ -497,12 +498,13 @@ class UnsteadySpectral:
         self.om = 1.0 - self.eta
         self.wq = clenshaw_curtis_weights(self.N)
 
-        # De-aliased volume.  R = (1-eta) S with S of degree N, so R^2 has
-        # degree 2N, whereas Clenshaw-Curtis on the N+1 CGL nodes is exact
-        # only up to degree N.  A Gauss-Legendre rule with N+1 points is
-        # exact up to degree 2N+1 and therefore integrates the interpolant
-        # exactly.  P_gl carries the CGL values to the GL nodes.
-        x, w = np.polynomial.legendre.leggauss(self.N + 1)
+        # De-aliased volume.  S is represented by a polynomial of degree N,
+        # so R=(1-eta)S has degree at most N+1 and R^2 degree at most 2N+2.
+        # Clenshaw-Curtis on the N+1 CGL nodes is exact only through degree N.
+        # A Gauss-Legendre rule with N+2 points is exact through degree 2N+3
+        # and therefore integrates the represented polynomial R^2 exactly.
+        # P_gl carries the CGL values to the GL nodes.
+        x, w = np.polynomial.legendre.leggauss(self.N + 2)
         eta_gl = 0.5 * (x + 1.0)
         self.w_gl = 0.5 * w
         self.om_gl = 1.0 - eta_gl
@@ -578,23 +580,24 @@ class UnsteadySpectral:
     def rhs(self, t: float, y: np.ndarray, Cpn_fixed=None) -> np.ndarray:
         """Right-hand side of the semidiscrete system.
 
-        On a non-physical state the default behaviour, `guard='clamp'`, is
-        to floor the offending quantity at `floor` and to count the event in
-        `self.n_clamped`, so that the value returned is finite and the
-        integrator rejects the step in the ordinary way.  Raising instead --
+        On a non-physical trial state the default behaviour, `guard='clamp'`,
+        is to floor the offending quantity at `floor` and count the right-hand
+        side evaluation in `self.n_clamped`, so that a finite value is
+        returned.  This does *not* force the adaptive integrator to reject
+        that trial or guarantee that no accepted state entered the clamped
+        region.  Raising instead --
         `guard='raise'`, the historical behaviour -- aborts the whole
         integration from a tentative stage, because `solve_ivp` does not
         catch exceptions from the right-hand side.  That is what prevented
         the degeneracy event from being located with a threshold below about
         1e-6 or with a loose tolerance.
 
-        Clamping is a numerical device, not a model: a solution is
-        trustworthy only up to the first *accepted* step at which clamping
-        occurred.  Callers should therefore check `n_clamped` against the
-        value it had before the integration, and treat any increase as a
-        warning that the run has entered the region where the formulation
-        has failed.  The event itself fires before that, at a positive
-        threshold, which is the whole point.
+        Clamping is a numerical device, not a model.  Any increase of
+        `n_clamped` is therefore a conservative warning that the solver has
+        evaluated the vector field outside the admissible region, whether on
+        a tentative or accepted stage.  Production calculations in the
+        revised manuscript locate the global contact event directly and are
+        interpreted only before that event.
         """
         m, S, u, v, L = self.unpack(y, t)
 

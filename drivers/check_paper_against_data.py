@@ -28,7 +28,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "..", "data")
 
 # Tables transcribed into the paper, and the columns whose values are
-# quoted there.  The supporting tables 10 to 20 are deposited but not
+# quoted there.  The supporting tables 10 to 21 are deposited but not
 # transcribed, so they are not checked.
 IN_PAPER = {
     "table1_spectral_convergence": ["L", "abs_error_vs_N96"],

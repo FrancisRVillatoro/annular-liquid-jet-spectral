@@ -1,104 +1,82 @@
-# Running the table computations on a cluster
+# Running the table computations on Picasso / Slurm
 
-The twenty tables decompose into 394 independent row computations: 76 for
-the nine tables of the paper, 180 for two dense sweeps that support claims
-in the text, and 138 for a set of studies whose purpose is to settle, in
-advance, the questions a referee would reasonably ask about claims that
-rest on a single parameter value or on a coarse sample. `drivers/table_tasks.py` is the single registry of what those
-rows are; `drivers/run_task.py` runs one of them and writes a one-line CSV
-into `data/partial/`; `drivers/merge_tables.py` assembles `data/*.csv` from
-those pieces in registry order, so the merged tables do not depend on the
-order in which the tasks finished.
+`drivers/table_tasks.py` is the single registry.  The final registry contains
+**410 independent tasks, indices 0--409**.  `drivers/run_task.py` writes one
+one-line CSV per task into `data/partial/`; `drivers/merge_tables.py` assembles
+the final `data/*.csv` files in registry order.
 
-The serial path, `drivers/make_tables.py`, calls exactly the same functions.
-The two cannot drift apart.
+The task ranges are:
 
-## What parallelism buys, and what it does not
+- 0--75: paper tables 1--9;
+- 76--255: dense supporting sweeps (tables 10--11);
+- 256--393: audit studies (tables 12--20);
+- 394--409: Table XXI, the characteristic-bound test of the unresolved
+  `a=0.10, St=0.50` failure.
 
-There are 76 tasks, so at most 76 cores do useful work; the rest sit idle.
-The wall time is set by the **longest single task**, not by the number of
-cores, and no task can be split further: each is one time integration of a
-stiff-ish ODE system, which is inherently sequential in time.
+On Picasso use the `_picasso` scripts and the exact interpreter path already
+embedded in them.  BLAS/OpenMP thread counts are fixed to one.
 
-The longest tasks are, in order: the finest mesh of the finite-difference
-cross-check (`table9`, M = 640), the lowest Strouhal number of the frequency
-sweep (`table7`, St = 0.005, which integrates to t = 1600), and the finest
-resolution of the degeneracy study (`table8`, N = 96). Expect a wall time of
-roughly half an hour plus queueing, against about three hours serial. The
-total core time is unchanged.
+## Stage A: Table XXI
 
-Per-core speed on a cluster node is typically no better than on a current
-laptop, and often slightly worse. The gain here is concurrency, nothing
-else.
-
-## Setup, once
+`picasso_audit_picasso.slurm` is deliberately restricted to
+`--array=394-409%16`.
 
 ```bash
-module avail python                 # find the available interpreter
-module load python/3.11             # adjust to what is actually there
-python3 -m venv $HOME/venv-alj
-source $HOME/venv-alj/bin/activate
-pip install -r requirements.txt
+cd ~/annular-liquid-jet-spectral_pub/hpc
+sbatch --parsable picasso_audit_picasso.slurm
 ```
 
-Then edit `hpc/picasso_tables.slurm`: set the queue or partition to what
-`sinfo` reports, and adjust the `module load` line to match.
+Submit `picasso_merge_picasso.slurm` with `afterok:<JOBID>`.  Review
+`data/table21_characteristic_bound.csv`; it must contain 17 lines including
+the header.  The a=0.10 branch is not to be given a physical interpretation
+until this table has been checked across N and epsilon.
 
-## Running
+## Stage B: final clean reproducibility run
+
+After Table XXI is accepted, clear **only** the partial row files and rerun
+all 410 tasks in the same Picasso environment:
 
 ```bash
+cd ~/annular-liquid-jet-spectral_pub
+rm -rf data/partial
+mkdir -p data/partial
 cd hpc
-sbatch picasso_tables.slurm            # indices   0- 75, the paper tables
-sbatch picasso_extra.slurm             # indices  76-255, supporting sweeps
-sbatch picasso_audit.slurm             # indices 256-393, supporting studies
-sbatch --dependency=afterok:<JOB1>:<JOB2>:<JOB3> picasso_merge.slurm
+sbatch --parsable picasso_full_0_409_picasso.slurm
 ```
 
-Each of the three has a `_picasso` counterpart carrying the module and
-interpreter settings that work on the SCBI machine at Malaga; use those
-there, and the generic ones elsewhere after adjusting the `module load`
-line and the queue.
+The full script uses `--array=0-409%138`.  Submit the merge with an
+`afterok:<JOBID>` dependency.  The merged CSVs from this clean run are the
+ones to freeze for the manuscript/deposit.
 
-The two arrays are independent and can run at the same time. Task indices
-are fixed by `TABLE_ORDER` in `table_tasks.py`, and each task writes its own
-file in `data/partial/`, so nothing collides.
-
-The dependency makes the merge wait for every array task, so a partial run
-never produces a partial table: `merge_tables.py` refuses to write a table
-whose rows are not all present and says which are missing.
-
-To re-run only what failed, submit the array again restricted to those
-indices, for example `sbatch --array=3,17,42 picasso_tables.slurm`. Tasks
-that already have a partial file simply overwrite it with the same value.
-
-## Checking
+## Mandatory checks before either stage
 
 ```bash
-cd drivers
-python3 run_task.py --list          # 394, with the parameters of each task
-ls ../data/partial | wc -l          # should reach 394
-python3 merge_tables.py
-python3 analyse_beta_law.py         # fits the exponent of the small-beta law
+cd ~/annular-liquid-jet-spectral_pub
+PY=/mnt/home/soft/python/programs/x86_64/python_3.11.4/bin/python
+sha256sum -c SHA256SUMS
+find src drivers docs -type f -name '*.py' -print0 | xargs -0 "$PY" -m py_compile
+echo "ALL_PYTHON_SYNTAX_EXIT=$?"
+bash -n hpc/picasso_audit_picasso.slurm
+echo "TABLE21_SLURM_SYNTAX_EXIT=$?"
+bash -n hpc/picasso_full_0_409_picasso.slurm
+echo "FULL_SLURM_SYNTAX_EXIT=$?"
+bash -n hpc/picasso_merge_picasso.slurm
+echo "MERGE_SLURM_SYNTAX_EXIT=$?"
+"$PY" drivers/run_task.py --list > /tmp/alj_tasks_410.txt
+sed -n '1p' /tmp/alj_tasks_410.txt
+sed -n '$p' /tmp/alj_tasks_410.txt
 ```
 
-A single task can always be run interactively for debugging:
-
-```bash
-python3 run_task.py --run 0
-```
-
-## Threading
-
-The Slurm script sets `OMP_NUM_THREADS=1` and its equivalents. This matters:
-without it, each array task would ask the BLAS threading layer for every
-core on the node, and tasks sharing a node would contend for the same cores
-and finish slower than a single task alone. The computations are dominated
-by ODE right-hand-side evaluations, not by dense linear algebra, so nothing
-is lost by running single-threaded.
+The first listing line must be `410`; the last task must be index `409`.
+Avoid piping `run_task.py --list` directly into `head`, which can produce an
+irrelevant `BrokenPipeError` when `head` closes the pipe early.
 
 ## Reproducibility
 
-Every task is deterministic and independent of the others, of the array
-index, and of the number of tasks running concurrently. Running the same
-task twice gives bit-identical output. The merged tables are therefore
-identical to those produced by the serial path.
+Every task prints SHA256 digests of the imported source modules plus NumPy and
+SciPy versions into its job log.  `SHA256SUMS` checks the synchronized source
+before execution.  This instrumentation exists because a previous hand patch
+on the cluster caused one Table IX run to use an older source copy.
+
+The final freeze is not a mixture of old and new partial results: it is the
+single clean 0--409 run described above.

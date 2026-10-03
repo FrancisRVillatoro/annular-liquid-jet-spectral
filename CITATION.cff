@@ -1,12 +1,13 @@
 cff-version: 1.2.0
 message: "If you use this software or these data, please cite both the software and the paper."
-title: "Annular liquid jets: solvers and data for exact constraint absorption and finite-time loss of transversality"
+title: "Annular liquid jets: solvers and data for exact constraint absorption and finite-time loss of global admissibility"
 abstract: >-
-  Chebyshev collocation solvers for the one-dimensional model of annular
-  liquid jets in which the algebraic constraint at the free end is absorbed
-  identically, together with an independent third-order upwind
-  finite-difference solver, the drivers that regenerate every table and
-  figure of the accompanying paper, and the resulting data.
+  Chebyshev collocation and independent upwind finite-difference solvers
+  for the one-dimensional annular-liquid-jet model, together with the
+  drivers and data supporting the revised manuscript. Version v1.1.0 adds
+  global-admissibility diagnostics, independent verification of first
+  interior contact, linear response, temporal and residual audits, and
+  corrected de-aliased volume quadrature.
 type: software
 authors:
   - family-names: Villatoro
@@ -14,8 +15,8 @@ authors:
     affiliation: "Universidad de Malaga, Escuela de Ingenierias Industriales, 29071 Malaga, Spain"
     email: frvillatoro@uma.es
     orcid: "https://orcid.org/0000-0003-4314-6213"
-version: "1.0.0"
-date-released: "2026-08-09"
+version: "1.1.0"
+date-released: "2026-10-03"
 license: MIT
 repository-code: "https://github.com/FrancisRVillatoro/annular-liquid-jet-spectral"
 doi: "10.5281/zenodo.21858484"
@@ -23,12 +24,15 @@ keywords:
   - annular liquid jet
   - liquid curtain
   - free boundary
+  - global admissibility
+  - interior contact
   - differential-algebraic index
   - Chebyshev collocation
+  - finite-thickness closure
   - capillary criticality
 preferred-citation:
   type: article
-  title: "Annular liquid jets: exact constraint absorption and finite-time loss of transversality"
+  title: "Annular liquid jets: exact constraint absorption and finite-time loss of global admissibility"
   authors:
     - family-names: Villatoro
       given-names: Francisco R.

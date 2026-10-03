@@ -1,19 +1,16 @@
 #!/bin/bash
-#SBATCH --job-name=alj_audit
-#SBATCH --array=394-409%16
+#SBATCH --job-name=alj_full
+#SBATCH --array=0-409%138
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=2G
 #SBATCH --time=04:00:00
 #SBATCH --constraint=cpu
-#SBATCH --output=logs/task_%A_%a.out
-#SBATCH --error=logs/task_%A_%a.err
+#SBATCH --output=logs/full_%A_%a.out
+#SBATCH --error=logs/full_%A_%a.err
 
-# Table XXI: characteristic lower-bound audit of the apparent m collapse.
-#  394-409  N = 32,48,64,96 x eps_m = 1e-2,1e-3,1e-4,1e-5.
-#
-# This is deliberately a separate 16-task array.  After it is reviewed,
-# use picasso_full_0_409_picasso.slurm for the final clean rerun.
+# Final clean reproducibility run: all 410 registered tasks, indices 0--409.
+# Clear data/partial before submitting this array.  Merge only afterok.
 
 set -eo pipefail
 
@@ -30,7 +27,6 @@ module load python/3.11.4
 hash -r
 
 PY=/mnt/home/soft/python/programs/x86_64/python_3.11.4/bin/python
-
 test -x "$PY"
 
 cd "$SLURM_SUBMIT_DIR/../drivers"

@@ -1,4 +1,10 @@
-"""Finite-time loss of transversality of the free boundary.
+"""LEGACY SUBMISSION DIAGNOSTIC: endpoint transversality.
+
+This file is retained to reproduce the originally submitted calculations.
+The revised manuscript uses the global-admissibility drivers because an
+interior zero of S occurs before the endpoint loses transversality.
+
+Finite-time loss of transversality of the free boundary.
 
 The tip is defined by R(t, L(t)) = 0.  The formulation with a scalar L(t)
 is valid while that zero is transversal, R_z(L) != 0, equivalently

@@ -561,6 +561,69 @@ def t20_row(a, St, N):
             f"{sol.status}", f"{sol.t[-1]:.3f}", op.n_clamped]
 
 
+
+# ---------------- XXI (characteristic lower bound for the apparent m collapse)
+def t21_row(a, St, N, eps):
+    """Test whether the apparent interior collapse of m is dynamically admissible.
+
+    Along a physical characteristic the continuity equation gives
+    d(log m)/dt = -u_z.  A characteristic entering through the nozzle
+    with m=1 therefore obeys m=exp(-integral u_z dt), and in particular
+
+        m >= exp(-integral max_eta |u_z| dt).
+
+    The diagnostic stops when the *nodal* minimum of m reaches ``eps``.
+    A uniform 1e-3 output grid is used only for the reported diagnostics;
+    event location itself is still done by solve_ivp.  Reporting the last
+    sampled state (rather than the interpolated event state) makes min_m a
+    nontrivial check instead of identically equal to eps.  ``t_event`` is
+    recorded separately.
+    """
+    base = Parameters(Fr=10, We=50, theta0_deg=0)
+    w, prob = solve_steady(N, base)
+    p = Parameters(Fr=10.0, We=50.0, theta0_deg=0.0, amplitude=a, St=St,
+                   ramp_cycles=2.0)
+    op = UnsteadySpectral(N, p, dealias=True)
+    y0 = op.state_from_steady(w, prob)
+    op.volume_reference = op.volume(op.unpack(y0, 0.0)[1], float(y0[-1]))
+
+    def ev_m(t, y):
+        return float(np.min(op.unpack(y, t)[0])) - eps
+    ev_m.terminal, ev_m.direction = True, -1
+
+    dt_diag = 1.0e-3
+    t_eval = np.arange(0.0, 40.0 + 0.5 * dt_diag, dt_diag)
+    sol = op.integrate(y0, 40.0, method="DOP853", rtol=1.0e-10,
+                       atol=1.0e-12, max_step=0.02, events=ev_m,
+                       t_eval=t_eval)
+
+    # Last uniformly sampled state before (or at) the terminal event.
+    t_last = float(sol.t[-1])
+    m, S, u, v, L = op.unpack(sol.y[:, -1], t_last)
+    j = int(np.argmin(m))
+    min_m = float(m[j])
+    eta_min = float(op.eta[j])
+
+    uzmax = np.empty(sol.t.size)
+    for k, (t, y) in enumerate(zip(sol.t, sol.y.T)):
+        _m, _S, _u, _v, _L = op.unpack(y, float(t))
+        uzmax[k] = float(np.max(np.abs(op.D @ _u)) / _L)
+
+    trap = getattr(np, "trapezoid", None) or np.trapz
+    int_abs_uz = float(trap(uzmax, sol.t))
+    lower_bound = float(np.exp(-int_abs_uz))
+    ratio = min_m / lower_bound
+    t_event = (float(sol.t_events[0][0]) if sol.t_events[0].size
+               else float("nan"))
+
+    return [f"{a:.3f}", f"{St:.3f}", N, f"{eps:.0e}",
+            "none" if not np.isfinite(t_event) else f"{t_event:.6f}",
+            f"{t_last:.3f}", f"{min_m:.4e}", f"{eta_min:.4f}",
+            f"{S[-1]:.4f}", f"{float(np.max(uzmax)):.4f}",
+            f"{int_abs_uz:.4f}", f"{lower_bound:.4e}",
+            f"{ratio:.4e}", f"{sol.status}", op.n_clamped]
+
+
 # --------------------------------------------------------------------
 # Tables defined after the functions above must be registered here,
 # not in the literal, because the literal is evaluated before those
@@ -622,6 +685,15 @@ TABLES.update({
                                                       (0.02, 0.50))
                   for N in (24, 32, 48, 64, 96)],
     },
+    "table21_characteristic_bound": {
+        "header": ["a", "St", "N", "eps_m", "t_event", "t_sample",
+                   "min_m", "eta_at_min_m", "S1", "max_abs_uz",
+                   "int_max_abs_uz_dt", "characteristic_lower_bound",
+                   "min_m_over_bound", "status", "n_clamped"],
+        "tasks": [(t21_row, (0.10, 0.50, N, eps))
+                  for N in (32, 48, 64, 96)
+                  for eps in (1.0e-2, 1.0e-3, 1.0e-4, 1.0e-5)],
+    },
 
 })
 
@@ -655,6 +727,7 @@ TABLE_ORDER = [
     "table18_finer_fd_mesh",         #         381 - 382
     "table19_residual_window",       #         383
     "table20_second_degeneracy",     #         384 - 393
+    "table21_characteristic_bound",  #         394 - 409
 ]
 assert set(TABLE_ORDER) == set(TABLES), "TABLE_ORDER is out of step with TABLES"
 
@@ -662,68 +735,3 @@ TASKS = []
 for name in TABLE_ORDER:
     for i, (fn, args) in enumerate(TABLES[name]["tasks"]):
         TASKS.append((name, i, fn, args))
-
-
-# ------------------ XXI (is m -> 0 a mechanism or a loss of resolution?)
-def t21_row(a, St, N, eps):
-    """Terminal event on min m = eps, with the diagnostics that decide.
-
-    Table XX leaves an open question: at a = 0.10 the minimum of m falls to
-    about 1e-14 while the largest axial velocity gradient never exceeds
-    0.67.  Along characteristics m = m0 exp(-int u_z dt), so a gradient
-    bounded by 0.67 over t <= 8.4 cannot take m below exp(-5.6) = 3.7e-3.
-    Either the gradient is far larger at instants the sampling misses, or
-    the computed m does not solve the equation.  This task settles it: the
-    event is placed on m itself, and the trajectory integral of the
-    gradient is accumulated continuously rather than sampled, so the two
-    sides of that inequality can be compared directly.
-    """
-    base = Parameters(Fr=10, We=50, theta0_deg=0)
-    w, prob = solve_steady(N, base)
-    p = Parameters(Fr=10.0, We=50.0, theta0_deg=0.0, amplitude=a, St=St,
-                   ramp_cycles=2.0)
-    op = UnsteadySpectral(N, p, dealias=True)
-    y0 = op.state_from_steady(w, prob)
-    op.volume_reference = op.volume(op.unpack(y0, 0.0)[1], float(y0[-1]))
-
-    def ev(t, y):
-        return float(op.unpack(y, t)[0].min()) - eps
-    ev.terminal, ev.direction = True, -1
-    te = np.linspace(0.0, 40.0, 40001)      # 1e-3 in time, not 400 samples
-    sol = op.integrate(y0, 40.0, method="DOP853", rtol=1e-10, atol=1e-12,
-                       max_step=0.01, events=ev, t_eval=te)
-
-    uz = np.empty(sol.t.size)
-    mmin = np.empty(sol.t.size)
-    smin = np.empty(sol.t.size)
-    for k in range(sol.t.size):
-        m, S, u, v, L = op.unpack(sol.y[:, k], sol.t[k])
-        uz[k] = np.max(np.abs(op.D @ u)) / L
-        mmin[k] = m.min()
-        smin[k] = S[-1]
-    integral = float(np.trapezoid(uz, sol.t))
-    k = int(np.argmin(mmin))
-    m, S, u, v, L = op.unpack(sol.y[:, k], sol.t[k])
-    eta_m = float(op.eta[int(np.argmin(m))])
-
-    tev = float(sol.t_events[0][0]) if sol.t_events[0].size else None
-    return [f"{a:.3f}", f"{St:.3f}", N, f"{eps:.0e}",
-            "none" if tev is None else f"{tev:.6f}",
-            f"{mmin.min():.4e}", f"{eta_m:.4f}", f"{smin[k]:.4f}",
-            f"{uz.max():.4f}", f"{integral:.4f}",
-            f"{np.exp(-integral):.3e}", f"{sol.status}",
-            f"{sol.t[-1]:.4f}", op.n_clamped]
-
-
-TABLES["table21_characteristic_bound"] = {
-    "header": ["a", "St", "N", "eps", "t_at_m_eps", "min_m", "eta_at_min_m",
-               "S1_there", "max_uz_over_run", "integral_uz_dt",
-               "exp_minus_integral", "status", "t_end", "n_clamped"],
-    "tasks": [(t21_row, (0.10, 0.50, N, e))
-              for e in (1.0e-2, 1.0e-4, 1.0e-6, 1.0e-8)
-              for N in (32, 48, 64, 96)],
-}
-TABLE_ORDER.append("table21_characteristic_bound")
-TASKS.extend((("table21_characteristic_bound", i, fn, args))
-             for i, (fn, args) in
-             enumerate(TABLES["table21_characteristic_bound"]["tasks"]))

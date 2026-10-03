@@ -113,8 +113,11 @@ class UpwindFD:
 
         Re_ = self.d_central(R)
         Ree = self.d2_central(R)
-        if Re_[-1] >= 0.0:
-            raise FloatingPointError(f"tip not transversal: R_eta(1)={Re_[-1]}")
+        # Do not raise when a tentative adaptive-RK stage crosses
+        # R_eta(1)=0.  The Table IX cross-check localises the physically
+        # relevant approach with a terminal event.  Raising here aborts
+        # solve_ivp before it can localise that event and previously made
+        # a clean M=640 crossing look like "not detected" on the cluster.
 
         Ldot = u[-1] - L * v[-1] / Re_[-1]
         a = (u - self.eta * Ldot) / L
